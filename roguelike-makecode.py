@@ -1,3 +1,5 @@
+# A function for shooting a projectile
+
 def on_a_pressed():
     global bullet
     if direction == 0:
@@ -90,10 +92,20 @@ def on_a_pressed():
             0)
 controller.A.on_event(ControllerButtonEvent.PRESSED, on_a_pressed)
 
+# A function to lose a life when player gets hit by an enemy
+
+def on_on_overlap(sprite2, otherSprite2):
+    info.change_life_by(-1)
+    pause(500)
+sprites.on_overlap(SpriteKind.player, SpriteKind.enemy, on_on_overlap)
+
+# A function for losing when life at zero
+
 def on_life_zero():
     game.game_over(False)
 info.on_life_zero(on_life_zero)
 
+# A function to spawn in an enemy
 def spawnEnemy():
     global mySprite2
     mySprite2 = sprites.create(img("""
@@ -210,21 +222,18 @@ def spawnEnemy():
         200,
         True)
     mySprite2.follow(mySprite, 60)
+# A function to destroy the enemy and the projectile when they collide
 
-def on_on_overlap(sprite, otherSprite):
+def on_on_overlap2(sprite, otherSprite):
     sprites.destroy(otherSprite, effects.fire, 500)
     sprites.destroy(sprite)
-sprites.on_overlap(SpriteKind.projectile, SpriteKind.enemy, on_on_overlap)
-
-def on_on_overlap2(sprite2, otherSprite2):
-    info.change_life_by(-1)
-    pause(500)
-sprites.on_overlap(SpriteKind.player, SpriteKind.enemy, on_on_overlap2)
+sprites.on_overlap(SpriteKind.projectile, SpriteKind.enemy, on_on_overlap2)
 
 mySprite2: Sprite = None
 bullet: Sprite = None
 direction = 0
 mySprite: Sprite = None
+gamePhase = 0
 tiles.set_current_tilemap(tilemap("""
     level1
     """))
@@ -251,8 +260,8 @@ mySprite.set_position(75, 54)
 controller.move_sprite(mySprite)
 info.set_life(3)
 scene.camera_follow_sprite(mySprite)
-gamePhase = 0
 direction = 90
+# A function to animate player movement
 
 def on_update_interval():
     global direction
