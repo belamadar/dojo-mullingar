@@ -1,3 +1,11 @@
+# A function to destroy the enemy and the projectile when they collide
+
+def on_on_overlap(sprite3, otherSprite):
+    sprites.destroy(otherSprite, effects.fire, 500)
+    sprites.destroy(sprite3)
+    spawnEnemy()
+sprites.on_overlap(SpriteKind.projectile, SpriteKind.enemy, on_on_overlap)
+
 # A function for shooting a projectile
 
 def on_a_pressed():
@@ -94,10 +102,10 @@ controller.A.on_event(ControllerButtonEvent.PRESSED, on_a_pressed)
 
 # A function to lose a life when player gets hit by an enemy
 
-def on_on_overlap(sprite2, otherSprite2):
+def on_on_overlap2(sprite2, otherSprite2):
     info.change_life_by(-1)
     pause(500)
-sprites.on_overlap(SpriteKind.player, SpriteKind.enemy, on_on_overlap)
+sprites.on_overlap(SpriteKind.player, SpriteKind.enemy, on_on_overlap2)
 
 # A function for losing when life at zero
 
@@ -105,6 +113,31 @@ def on_life_zero():
     game.game_over(False)
 info.on_life_zero(on_life_zero)
 
+def checkSurroundingRooms(myLocation: number):
+    if map2[myLocation + 1] == 1:
+        tiles.set_tile_at(tiles.get_tile_location(14, 8),
+            assets.tile("""
+                doorRight
+                """))
+        tiles.set_wall_at(tiles.get_tile_location(14, 8), False)
+    if map2[myLocation - 1] == 1:
+        tiles.set_tile_at(tiles.get_tile_location(0, 8),
+            assets.tile("""
+                doorLeft
+                """))
+        tiles.set_wall_at(tiles.get_tile_location(0, 8), False)
+    if map2[myLocation - 10] == 1:
+        tiles.set_tile_at(tiles.get_tile_location(8, 0),
+            assets.tile("""
+                doorUp
+                """))
+        tiles.set_wall_at(tiles.get_tile_location(8, 0), False)
+    if map2[myLocation + 10] == 1:
+        tiles.set_tile_at(tiles.get_tile_location(8, 14),
+            assets.tile("""
+                doorDown
+                """))
+        tiles.set_wall_at(tiles.get_tile_location(8, 14), False)
 # A function to spawn in an enemy
 def spawnEnemy():
     global mySprite2
@@ -127,7 +160,7 @@ def spawnEnemy():
             . . . f f f f f f f . . . . . .
             """),
         SpriteKind.enemy)
-    mySprite2.set_position(0, 0)
+    mySprite2.set_position(randint(5, 145), randint(5, 110))
     animation.run_image_animation(mySprite2,
         [img("""
                 . . f f f . . . . . . . . f f f
@@ -222,18 +255,28 @@ def spawnEnemy():
         200,
         True)
     mySprite2.follow(mySprite, 60)
-# A function to destroy the enemy and the projectile when they collide
 
-def on_on_overlap2(sprite, otherSprite):
-    sprites.destroy(otherSprite, effects.fire, 500)
-    sprites.destroy(sprite)
-sprites.on_overlap(SpriteKind.projectile, SpriteKind.enemy, on_on_overlap2)
+def on_overlap_tile(sprite, location):
+    global myLocation2
+    if controller.B.is_pressed():
+        myLocation2 = 44
+        tiles.set_current_tilemap(tilemap("""
+            defaultRoom
+            """))
+        tiles.place_on_tile(mySprite, tiles.get_tile_location(8, 8))
+        checkSurroundingRooms(myLocation2)
+scene.on_overlap_tile(SpriteKind.player,
+    sprites.dungeon.door_open_north,
+    on_overlap_tile)
 
+myLocation2 = 0
 mySprite2: Sprite = None
 bullet: Sprite = None
+map2: List[number] = []
 direction = 0
 mySprite: Sprite = None
 gamePhase = 0
+list2: List[number] = []
 tiles.set_current_tilemap(tilemap("""
     level1
     """))
@@ -256,11 +299,17 @@ mySprite = sprites.create(img("""
         . . . . f f . . . f f f . . . .
         """),
     SpriteKind.player)
-mySprite.set_position(75, 54)
+tiles.place_on_tile(mySprite, tiles.get_tile_location(8, 8))
+scaling.scale_to_percent(mySprite, 80, ScaleDirection.UNIFORMLY, ScaleAnchor.MIDDLE)
 controller.move_sprite(mySprite)
 info.set_life(3)
 scene.camera_follow_sprite(mySprite)
 direction = 90
+map2 = []
+for index in range(100):
+    map2.unshift(0)
+map2[44] = 1
+map2[45] = 1
 # A function to animate player movement
 
 def on_update_interval():
@@ -341,7 +390,7 @@ def on_update_interval():
                     . . . . . f f . . . f f f . . .
                     """)],
             100,
-            True)
+            False)
     elif controller.left.is_pressed():
         direction = 270
         animation.run_image_animation(mySprite,
@@ -418,7 +467,7 @@ def on_update_interval():
                     . . . f f f . . . f f . . . . .
                     """)],
             100,
-            True)
+            False)
     elif controller.down.is_pressed():
         direction = 180
         animation.run_image_animation(mySprite,
@@ -495,7 +544,7 @@ def on_update_interval():
                     . . . . . . . . . f f f . . . .
                     """)],
             100,
-            True)
+            False)
     elif controller.up.is_pressed():
         direction = 0
         animation.run_image_animation(mySprite,
@@ -572,5 +621,5 @@ def on_update_interval():
                     . . . . . . . . . f f f . . . .
                     """)],
             100,
-            True)
+            False)
 game.on_update_interval(400, on_update_interval)
